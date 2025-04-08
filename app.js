@@ -7,12 +7,12 @@ app.use(cors());
 app.use(express.json());
 
 // const userRoutes = require("./routes/userRoutes");
-// const merchantRoutes = require("./routes/merchantRoute");
+const merchantRoutes = require("./routes/merchantRoute");
 const authRoutes = require("./routes/authRoutes");
 
 app.use("/auth", authRoutes);
 
 // app.use("/users", userRoutes);
-// app.use("/merchants", merchantRoutes);
+app.use("/merchants", merchantRoutes);
 
 module.exports = app;

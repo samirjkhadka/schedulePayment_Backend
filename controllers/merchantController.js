@@ -1,72 +1,70 @@
-const db = require("../config/db");
-const { sql } = db;
+const { sequelize } = require("../config/db");
 
-const MerchantController = {
-  getAll: async (req, res) => {
-    try {
-      const result = await db.query("SELECT * FROM merchant");
-      res.status(200).json(result.recordset);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-  getById: async (req, res) => {
-    try {
-      const { id } = req.params;
-      const result = await db.query("SELECT * FROM Merchants WHERE id = @id", {
-        id: { type: sql.Int, value: id },
-      });
-      res.status(200).json(result.recordset[0]);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-
-  create: async (req, res) => {
-    try {
-      const { name, contact } = req.body;
-      await db.query(
-        "INSERT INTO Merchants (name, contact) VALUES (@name, @contact)",
-        {
-          name: { type: sql.VarChar, value: name },
-          contact: { type: sql.VarChar, value: contact },
-        }
-      );
-      res.status(201).json({ message: "Merchant created" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-
-  update: async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { name, contact } = req.body;
-      await db.query(
-        "UPDATE Merchants SET name = @name, contact = @contact WHERE id = @id",
-        {
-          id: { type: sql.Int, value: id },
-          name: { type: sql.VarChar, value: name },
-          contact: { type: sql.VarChar, value: contact },
-        }
-      );
-      res.status(200).json({ message: "Merchant updated" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-
-  remove: async (req, res) => {
-    try {
-      const { id } = req.params;
-      await db.query("DELETE FROM Merchants WHERE id = @id", {
-        id: { type: sql.Int, value: id },
-      });
-      res.status(200).json({ message: "Merchant deleted" });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
+// Get all merchants
+exports.getAllMerchants = async (req, res) => {
+  try {
+    const [results] = await sequelize.query("EXEC sp_GetAllMerchants");
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch merchants", error });
+  }
 };
 
-module.exports = MerchantController;
+// Get merchant by ID
+exports.getMerchantById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [results] = await sequelize.query("EXEC sp_GetMerchantById :id", {
+      replacements: { id },
+    });
+    res.json(results[0]);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch merchant", error });
+  }
+};
+
+// Create merchant
+exports.createMerchant = async (req, res) => {
+  try {
+    const { name, contactEmail, contactPhone, status } = req.body;
+    await sequelize.query(
+      "EXEC sp_CreateMerchant :name, :contactEmail, :contactPhone, :status",
+      {
+        replacements: { name, contactEmail, contactPhone, status },
+      }
+    );
+    res.status(201).json({ message: "Merchant created successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create merchant", error });
+  }
+};
+
+// Update merchant
+exports.updateMerchant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, contactEmail, contactPhone, status } = req.body;
+    await sequelize.query(
+      "EXEC sp_UpdateMerchant :id, :name, :contactEmail, :contactPhone, :status",
+      {
+        replacements: { id, name, contactEmail, contactPhone, status },
+      }
+    );
+    res.json({ message: "Merchant updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update merchant", error });
+  }
+};
+
+// Delete merchant
+exports.deleteMerchant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await sequelize.query("EXEC sp_DeleteMerchant :id", {
+      replacements: { id },
+    });
+    res.json({ message: "Merchant deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete merchant", error });
+  }
+};

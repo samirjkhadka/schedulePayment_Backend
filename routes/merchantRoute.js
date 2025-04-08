@@ -1,11 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const MerchantController = require("../controllers/merchantController");
+const merchantController = require("../controllers/merchant.controller");
+const authMiddleware = require("../middlewares/auth");
 
-router.get("/", MerchantController.getAll);
-router.get("/:id", MerchantController.getById);
-router.post("/", MerchantController.create);
-router.put("/:id", MerchantController.update);
-router.delete("/:id", MerchantController.remove);
+// Protect all merchant routes
+router.use(authMiddleware.verifyToken);
+
+// GET all merchants
+router.get("/", merchantController.getAllMerchants);
+
+// GET merchant by ID
+router.get("/:id", merchantController.getMerchantById);
+
+// CREATE new merchant
+router.post("/", merchantController.createMerchant);
+
+// UPDATE merchant
+router.put("/:id", merchantController.updateMerchant);
+
+// DELETE merchant
+router.delete("/:id", merchantController.deleteMerchant);
 
 module.exports = router;
